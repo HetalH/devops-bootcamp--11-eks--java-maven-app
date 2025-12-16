@@ -59,6 +59,8 @@ pipeline {
             steps {
                 script {
                     withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]){
+                        sh 'git config user.email "jenkins@example.com"'
+                        sh 'git config user.name "jenkins"'
                         sh 'git remote set-url origin https://${GITHUB_TOKEN}@github.com/HetalH/devops-bootcamp--11-eks--java-maven-app.git'
                         sh 'git add .'
                         sh  'git commit -m "ci: version bump"'
