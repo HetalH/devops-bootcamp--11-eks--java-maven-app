@@ -25,13 +25,8 @@ pipeline {
                             ]) {
                 script {
 
-                                 env.KUBECONFIG = '/var/jenkins_home/.kube/config'
-
-                                       // kubectl will automatically use aws-iam-authenticator
-                                       sh 'kubectl get nodes'
-
-                                       // Deploy a test app
-                                       sh 'kubectl create deployment nginx-deployment --image=nginx'
+                                                               // Deploy a test app
+                                       sh 'kubectl --insecure-skip-tls-verify create deployment nginx-deployment --image=nginx'
                 }
                 }
             }
