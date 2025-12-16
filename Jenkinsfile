@@ -2,18 +2,40 @@
 
 pipeline {
     agent any
+    tools {
+        maven 'Maven-3.9'
+    }
     stages {
+        stage('increment version') {
+            steps {
+                script {
+                    echo 'incrementing app version...'
+                    sh 'mvn build-helper:parse-version versions:set \
+                        -DnewVersion=\\\${parsedVersion.majorVersion}.\\\${parsedVersion.minorVersion}.\\\${parsedVersion.nextIncrementalVersion} \
+                        versions:commit'
+                    def matcher = readFile('pom.xml') =~ '<version>(.+)</version>'
+                    def version = matcher[0][1]
+                    env.IMAGE_NAME = "$version-$BUILD_NUMBER"
+                }
+            }
+        }
         stage('build app') {
             steps {
-               script {
-                   echo "building the application..."
-               }
+                script {
+                    echo 'building the application...'
+                    sh 'mvn clean package'
+                }
             }
         }
         stage('build image') {
             steps {
                 script {
                     echo "building the docker image..."
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]){
+                        sh "docker build -t hetallearn/demo-app:${IMAGE_NAME} ."
+                        sh 'echo $PASS | docker login -u $USER --password-stdin'
+                        sh "docker push hetallearn/demo-app:${IMAGE_NAME}"
+                    }
                 }
             }
         }
@@ -21,14 +43,30 @@ pipeline {
              environment {
                            AWS_ACCESS_KEY_ID = credentials('jenkins_aws_access_key_id')
                            AWS_SECRET_ACCESS_KEY = credentials('jenkins-aws_secret_access_key')
+                           APP_NAME = 'java-maven-app'
                        }
             steps {
               script {
                  echo 'deploying docker image...'
-                 sh 'kubectl create deployment nginx-deployment --image=nginx'
+                 sh 'envsubst < kubernetes/deployment.yaml | kubectl apply -f -'
+                 sh 'envsubst < kubernetes/service.yaml | kubectl apply -f -'
+
                  }
              }
 
         }
+        stage('commit version update'){
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]){
+                        sh 'git remote set-url origin https://${GITHUB_TOKEN}@github.com/HetalH/devops-bootcamp--11-eks--java-maven-app.git'
+                        sh 'git add .'
+                        sh  'git commit -m "ci: version bump"'
+                       sh 'git push https://HetalH:${GITHUB_TOKEN}@github.com/HetalH/devops-bootcamp--11-eks--java-maven-app.git HEAD:jenkins-jobs'
+                    }
+                }
+            }
+        }
     }
 }
+
