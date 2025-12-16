@@ -5,6 +5,10 @@ pipeline {
     tools {
         maven 'maven-3.9'
     }
+    environment {
+        DOCKER_REPO_SERVER = '504445450752.dkr.ecr.us-east-1.amazonaws.com'
+        DOCKER_REPO = "${DOCKER_REPO_SERVER}/java-maven-app"
+    }
     stages {
         stage('increment version') {
             steps {
@@ -31,10 +35,10 @@ pipeline {
             steps {
                 script {
                     echo "building the docker image..."
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]){
-                        sh "docker build -t hetallearn/demo-app:${IMAGE_NAME} ."
-                        sh 'echo $PASS | docker login -u $USER --password-stdin'
-                        sh "docker push hetallearn/demo-app:${IMAGE_NAME}"
+                    withCredentials([usernamePassword(credentialsId: 'ecr-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]){
+                        sh "docker build -t ${DOCKER_REPO}:${IMAGE_NAME} ."
+                        sh "echo $PASS | docker login -u $USER --password-stdin ${DOCKER_REPO_SERVER}"
+                        sh "docker push ${DOCKER_REPO}:${IMAGE_NAME}"
                     }
                 }
             }
@@ -64,7 +68,7 @@ pipeline {
                         sh 'git remote set-url origin https://${GITHUB_TOKEN}@github.com/HetalH/devops-bootcamp--11-eks--java-maven-app.git'
                         sh 'git add .'
                         sh  'git commit -m "ci: version bump"'
-                       sh 'git push https://HetalH:${GITHUB_TOKEN}@github.com/HetalH/devops-bootcamp--11-eks--java-maven-app.git HEAD:jenkins-jobs'
+                       sh 'git push https://HetalH:${GITHUB_TOKEN}@github.com/HetalH/devops-bootcamp--11-eks--java-maven-app.git HEAD:ecr-jenkins-jobs'
                     }
                 }
             }
