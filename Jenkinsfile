@@ -24,9 +24,8 @@ pipeline {
                                 string(credentialsId: 'jenkins-aws_secret_access_key', variable: 'AWS_SECRET_ACCESS_KEY')
                             ]) {
                 script {
-                                        echo $KUBECONFIG
-                                       // Verify AWS IAM authentication works
-                                       sh 'aws sts get-caller-identity'
+
+                                 env.KUBECONFIG = '/var/jenkins_home/.kube/config'
 
                                        // kubectl will automatically use aws-iam-authenticator
                                        sh 'kubectl get nodes'
