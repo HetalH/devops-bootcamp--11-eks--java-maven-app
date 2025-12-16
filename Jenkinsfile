@@ -24,14 +24,16 @@ pipeline {
                                 string(credentialsId: 'jenkins-aws_secret_access_key', variable: 'AWS_SECRET_ACCESS_KEY')
                             ]) {
                 script {
-                env.KUBECONFIG = '/var/jenkins_home/.kube/config'
-                   echo 'deploying docker image...'
-                   echo "AWS Access Key ID: ${env.AWS_ACCESS_KEY_ID}"
-                   sh 'echo "AWS Access Key ID: $AWS_ACCESS_KEY_ID"'
-                            // Test AWS credentials
-                    sh 'aws sts get-caller-identity'
-                   sh 'aws-iam-authenticator token -i demo-cluster'
-                   sh 'kubectl create deployment nginx-deployment --image=nginx'
+                  sh 'aws eks update-kubeconfig --name demo-cluster --region us-east-1'
+
+                                       // Verify AWS IAM authentication works
+                                       sh 'aws sts get-caller-identity'
+
+                                       // kubectl will automatically use aws-iam-authenticator
+                                       sh 'kubectl get nodes'
+
+                                       // Deploy a test app
+                                       sh 'kubectl create deployment nginx-deployment --image=nginx'
                 }
                 }
             }
