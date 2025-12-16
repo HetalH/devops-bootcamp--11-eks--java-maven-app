@@ -24,7 +24,6 @@ pipeline {
                                 string(credentialsId: 'jenkins-aws_secret_access_key', variable: 'AWS_SECRET_ACCESS_KEY')
                             ]) {
                 script {
-                  sh 'aws eks update-kubeconfig --name demo-cluster --region us-east-1'
 
                                        // Verify AWS IAM authentication works
                                        sh 'aws sts get-caller-identity'
