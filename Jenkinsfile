@@ -24,6 +24,7 @@ pipeline {
                                 string(credentialsId: 'jenkins-aws_secret_access_key', variable: 'AWS_SECRET_ACCESS_KEY')
                             ]) {
                 script {
+                env.KUBECONFIG = '/var/jenkins_home/.kube/config'
                    echo 'deploying docker image...'
                    echo "AWS Access Key ID: ${env.AWS_ACCESS_KEY_ID}"
                    sh 'echo "AWS Access Key ID: $AWS_ACCESS_KEY_ID"'
