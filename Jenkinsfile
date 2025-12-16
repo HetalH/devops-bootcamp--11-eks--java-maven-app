@@ -25,6 +25,11 @@ pipeline {
                             ]) {
                 script {
                    echo 'deploying docker image...'
+                   echo "AWS Access Key ID: ${env.AWS_ACCESS_KEY_ID}"
+                   sh 'echo "AWS Access Key ID: $AWS_ACCESS_KEY_ID"'
+                            // Test AWS credentials
+                    sh 'aws sts get-caller-identity'
+                   sh 'aws-iam-authenticator token -i demo-cluster'
                    sh 'kubectl create deployment nginx-deployment --image=nginx'
                 }
                 }
